@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Task-3</title>
+    <style type="text/css">
+        .container {
+            display: block;
+            width: 60%;
+            margin: 20px auto;
+        }
+        .example {
+            text-align: center;
+        }
+        .example-item {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+        }
+        .field {
+            width: 400px;
+            font-size: 0px;
+            margin: 20px auto;
+        }
+        p {
+            text-align: center;
+        }
+        .cell {
+            display: inline-block;
+            width: 100px;
+            height: 100px;
+            outline: 1px solid black;
+            padding: 0px;
+            background-color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <p>Примеры цветов</p>
+        <div class="example">
+            <div class="example-item"></div>
+            <div class="example-item"></div>
+            <div class="example-item"></div>
+            <div class="example-item"></div>
+            <div class="example-item"></div>
+            <div class="example-item"></div>
+            <div class="example-item"></div>
+            <div class="example-item"></div>
+        </div>
+        <div class="field">
+            <button class="cell"></button>
+            <button class="cell"></button>
+            <button class="cell"></button>
+            <button class="cell"></button>
+            <button class="cell"></button>
+            <button class="cell"></button>
+            <button class="cell"></button>
+            <button class="cell"></button>
+            <button class="cell"></button>
+            <button class="cell"></button>
+            <button class="cell"></button>
+            <button class="cell"></button>
+            <button class="cell"></button>
+            <button class="cell"></button>
+            <button class="cell"></button>
+            <button class="cell"></button>
+        </div>
+        <p class="timer"></p>
+    </div>
+   
+    <script>
+        // Ячейки созданных цветов
+        let cells = document.querySelectorAll('.example-item');
+        // Кнопки поля
+        let btns = document.querySelectorAll('.cell');
+        // Перемешанный массив идентификаторов цветов кнопок
+        let arr = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7].sort(function(){return (0.5 - Math.random());});
+        //Массив учета ходов
+        let moves = [];
+        //Переменная посчета совпадений
+        let match = 0;
+        // Поле таймера
+        let timerField = document.querySelector('.timer');
+        // Минуты, секунды и милисекунды
+        let m = 0;
+        let s = 0;
+        let ms = 0;
+        // Значение таймера
+        timerField.innerHTML = "0" + m + ":0" + s + ":0" + ms;//'00:00:00';
+        // Говорит о том что таймер не работает
+        let timerStart = false;
+        // Расставялем data атрибуты (номер ячекий и значение цвета) и назнаем обработчик при нажатии 
+        for (let i = 0; i < btns.length; i++) {
+            btns[i].setAttribute('data-color', arr[i]);
+            btns[i].setAttribute('data-number', i);
+            btns[i].addEventListener('click', function(event){btnClick(event)});
+        }
+        // Взято с GitHub. В 6 повторениях цикла, получает случайное знанчение из массива letters, из которых создает hex код цвета
+        function getRandomColor() {
+            var letters = '0123456789ABCDEF';
+            var color = '#';
+            for (var i = 0; i < 6; i++ ) {
+            color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        } 
+        // Создаем палитру из 8 цветов. Палитра отображается в div.example
+        let colors = []
+        for (let i = 0; i < 8; i++) {
+            const color = getRandomColor()
+            colors.push(color);
+            cells[i].style.backgroundColor = color;
+        }
+        // Функция таймер
+        timer = () => {
+            ms++
+            if (ms > 99) {
+                ms = 0;
+                s++
+            }
+            if (s > 59) {
+                s = 0;
+                m++
+            }
+            // Дополнительные нули для сохранения формата 00:00:00
+            const a = (m < 10) ? "0" : "";
+            const b = (s < 10) ? "0" : "";
+            const c = (ms < 10) ? "0" : ""
+            timerField.innerHTML = a + m + ":" + b + s + ":" + c + ms;
+            return;
+        }
+        let timerId
+        // Функция вызова таймера
+        start = () => {
+            timerId = setInterval(timer, 10/*, timerStart*/);
+            return;
+        }
+        // Сравниваем 2 последних хода на момент вызова функции
+        // При совпадении цветов увеличиваем match и делаем проверку для остановки таймера(конец игры), 
+        // при не совпадении перекрашиваем ячейки в исходный цвет(белый)
+        compare = (a, b) => {
+            if (btns[a].dataset.color === btns[b].dataset.color) {
+                match++
+                if (match === 8) {clearInterval(timerId)}
+            } else {
+                btns[a].style.backgroundColor = 'white';
+                btns[a].disabled = false;
+                btns[b].style.backgroundColor = 'white';
+                btns[b].disabled = false;
+            }
+            return;
+        }
+
+        btnClick = (event) => {
+            // Активация таймера при первом клике
+            if (!timerStart) {
+                timerStart = true;
+                start();
+            }
+            event.target.disabled = true;
+            moves.push(event.target.dataset.number);
+            const color = colors[event.target.dataset.color];
+            event.target.style.backgroundColor = color;
+            if (moves.length % 2 === 0) {
+                setTimeout(compare, 500, moves[moves.length - 1], moves[moves.length - 2]);
+            }
+            return
+        }
+        
+    </script>
+</body>
+</html>
